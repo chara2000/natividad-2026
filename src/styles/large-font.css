@@ -1,0 +1,25 @@
+/* ============================================================
+   Accessibility: Large Font Mode
+   Applied via .large-font on <html> when user enables it.
+   ============================================================ */
+
+.large-font {
+  font-size: 112%;
+}
+
+.large-font .text-\[10px\] { font-size: 0.75rem !important; }
+.large-font .text-\[11px\] { font-size: 0.8rem !important; }
+.large-font .text-xs       { font-size: 0.875rem !important; }
+.large-font .text-sm       { font-size: 1rem !important; }
+.large-font .text-base     { font-size: 1.1rem !important; }
+.large-font .text-lg       { font-size: 1.25rem !important; }
+.large-font .text-xl       { font-size: 1.4rem !important; }
+.large-font .text-2xl      { font-size: 1.65rem !important; }
+.large-font .text-3xl      { font-size: 2rem !important; }
+.large-font .text-4xl      { font-size: 2.4rem !important; }
+
+/* Ensure tap targets grow proportionally */
+.large-font button,
+.large-font a {
+  min-height: 2.5rem;
+}

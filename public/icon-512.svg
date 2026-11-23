@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#052e16"/>
+      <stop offset="50%" stop-color="#064e3b"/>
+      <stop offset="100%" stop-color="#881337"/>
+    </linearGradient>
+    <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fef08a" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Background Circle with Gold Border -->
+  <circle cx="256" cy="256" r="240" fill="url(#bg)" stroke="#fbbf24" stroke-width="8"/>
+  <circle cx="256" cy="256" r="230" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="8 6"/>
+
+  <!-- Star of Bethlehem on top -->
+  <polygon points="256,60 268,100 310,100 276,124 288,164 256,140 224,164 236,124 202,100 244,100" fill="#fbbf24"/>
+  <circle cx="256" cy="112" r="20" fill="url(#goldGlow)"/>
+
+  <!-- Christmas Tree Layers -->
+  <!-- Top Layer -->
+  <polygon points="256,130 180,210 215,210 160,280 200,280 130,370 382,370 312,280 352,280 297,210 332,210" fill="#15803d" stroke="#22c55e" stroke-width="4"/>
+  <!-- Tree Trunk -->
+  <rect x="232" y="370" width="48" height="60" rx="6" fill="#78350f" stroke="#b45309" stroke-width="3"/>
+
+  <!-- Tree Baubles / Ornaments -->
+  <circle cx="220" cy="230" r="14" fill="#e11d48" stroke="#ffe4e6" stroke-width="2"/>
+  <circle cx="290" cy="240" r="12" fill="#f59e0b" stroke="#fef3c7" stroke-width="2"/>
+  <circle cx="190" cy="310" r="16" fill="#3b82f6" stroke="#dbeafe" stroke-width="2"/>
+  <circle cx="260" cy="300" r="15" fill="#e11d48" stroke="#ffe4e6" stroke-width="2"/>
+  <circle cx="320" cy="320" r="14" fill="#fbbf24" stroke="#fffbeb" stroke-width="2"/>
+  <circle cx="230" cy="350" r="13" fill="#10b981" stroke="#d1fae5" stroke-width="2"/>
+
+  <!-- Gift Box in front -->
+  <rect x="220" y="390" width="72" height="56" rx="6" fill="#be123c" stroke="#fbbf24" stroke-width="3"/>
+  <rect x="250" y="390" width="12" height="56" fill="#fbbf24"/>
+  <rect x="220" y="412" width="72" height="12" fill="#fbbf24"/>
+  <!-- Ribbon Bow -->
+  <ellipse cx="242" cy="384" rx="12" ry="8" fill="#fbbf24"/>
+  <ellipse cx="270" cy="384" rx="12" ry="8" fill="#fbbf24"/>
+
+  <!-- Sparkles -->
+  <polygon points="120,180 123,190 133,193 123,196 120,206 117,196 107,193 117,190" fill="#fde047"/>
+  <polygon points="390,200 393,210 403,213 393,216 390,226 387,216 377,213 387,210" fill="#fde047"/>
+  <polygon points="370,120 372,126 378,128 372,130 370,136 368,130 362,128 368,126" fill="#fde047"/>
+  <polygon points="140,110 142,116 148,118 142,120 140,126 138,120 132,118 138,116" fill="#fde047"/>
+</svg>

@@ -1,0 +1,29 @@
+{
+  "name": "Natividad — Plataforma Navideña Comunitaria",
+  "short_name": "Natividad",
+  "description": "Organiza tus actividades navideñas, novenas, presupuestos, gastos, amigo secreto e itinerarios en comunidad.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#051c10",
+  "theme_color": "#064e3b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
