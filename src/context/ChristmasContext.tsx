@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
   UserProfile,
   UserRole,
@@ -227,6 +227,12 @@ export const ChristmasProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(initialCurrentUser);
   const [community, setCommunity] = useState<Community>(initialCommunity);
   const [members, setMembers] = useState<UserProfile[]>(initialMembers);
+
+  const membersRef = useRef(members);
+  membersRef.current = members;
+
+  const currentUserRef = useRef(currentUser);
+  currentUserRef.current = currentUser;
   const [activities, setActivities] = useState<Activity[]>(initialActivities);
   const [expenses, setExpenses] = useState<ExpenseItem[]>(initialExpenses);
   const [contributions, setContributions] = useState<UserContribution[]>(initialContributions);
@@ -313,12 +319,19 @@ export const ChristmasProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Handle Google OAuth session from Supabase
   const handleGoogleUser = (sbUser: any) => {
     const email = sbUser.email?.toLowerCase();
+    const curr = currentUserRef.current;
+
+    // Prevent redundant loop if already logged in with this Google account
+    if (curr && email && curr.email?.toLowerCase() === email && curr.authProvider === 'google') {
+      return;
+    }
+
     const avatar =
       sbUser.user_metadata?.avatar_url ||
       sbUser.user_metadata?.picture ||
       `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='85'>🎅</text></svg>`;
 
-    const existing = members.find(
+    const existing = membersRef.current.find(
       m => (email && m.email?.toLowerCase() === email) || m.id === `usr-google-${sbUser.id}` || m.id === sbUser.id
     );
 
@@ -329,13 +342,19 @@ export const ChristmasProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         avatar: existing.avatar || avatar,
         authProvider: 'google',
       };
-      if (!currentUser || currentUser.id !== existing.id) {
+      if (!curr || curr.id !== existing.id) {
         setCurrentUser(updatedExisting);
         if (typeof window !== 'undefined') {
           localStorage.setItem('natividad_current_user', JSON.stringify(updatedExisting));
         }
       }
-      setMembers(prev => prev.map(m => m.id === existing.id ? updatedExisting : m));
+      setMembers(prev => {
+        const item = prev.find(m => m.id === existing.id);
+        if (item && item.authProvider === 'google' && item.avatar === updatedExisting.avatar) {
+          return prev;
+        }
+        return prev.map(m => m.id === existing.id ? updatedExisting : m);
+      });
 
       // Guarantee existing profile is tied to auth.users in Supabase public.profiles table
       const sb = getSupabase();
@@ -481,7 +500,7 @@ export const ChristmasProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => {
       subscription?.unsubscribe();
     };
-  }, [isHydrated, members]);
+  }, [isHydrated]);
 
   // Custom Alert State
   const [alertState, setAlertState] = useState<AlertModalOptions>({
