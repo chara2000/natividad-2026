@@ -730,7 +730,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <label className="block text-[11px] font-bold text-emerald-300 uppercase tracking-wider mb-1">
                     Elige tu Avatar Navideño
                   </label>
-                  <div className="flex gap-2 overflow-x-auto pb-1 pt-0.5">
+                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 pt-0.5">
                     {AVATAR_OPTIONS.map(av => {
                       const isSel = av.id === selectedAvatarId;
                       return (
@@ -741,11 +741,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                             soundFX.playClick();
                             setSelectedAvatarId(av.id);
                           }}
-                          className={`flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center text-xl transition-all border cursor-pointer ${
+                          className={`w-full h-11 rounded-2xl flex items-center justify-center text-xl transition-all border cursor-pointer ${
                             isSel
-                              ? 'bg-amber-400/30 border-amber-400 scale-110 shadow-md shadow-amber-400/20'
+                              ? 'bg-amber-400/30 border-amber-400 scale-105 shadow-md shadow-amber-400/20'
                               : 'bg-black/40 border-white/10 hover:border-white/30'
                           }`}
+                          title={av.label}
                         >
                           {av.emoji}
                         </button>

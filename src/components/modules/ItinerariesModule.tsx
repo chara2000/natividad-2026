@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useChristmas } from '../../context/ChristmasContext';
 import { soundFX } from '../../utils/audio';
-import { FilterBar, ChipGroup } from '../ui/FilterBar';
+import { FilterBar, FilterDropdown, ChipGroup } from '../ui/FilterBar';
 
 export const ItinerariesModule: React.FC = () => {
   const {
@@ -99,45 +99,46 @@ export const ItinerariesModule: React.FC = () => {
         )}
       </div>
 
-      {/* ✨ Beautiful Activity Selector with FilterBar */}
+      {/* ✨ Beautiful Activity & Itinerary Dropdown Selectors */}
       <FilterBar
         label="Seleccionar Actividad e Itinerario"
         activeFiltersCount={itinStatusFilter ? 1 : 0}
         onClearAll={() => { setItinStatusFilter(''); setItinResponsibleFilter(''); }}
         defaultOpen={true}
       >
-        {/* Activity tabs scrollable */}
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1">
-          {activities.map(act => (
-            <button
-              key={act.id}
-              onClick={() => {
-                soundFX.playClick();
-                setSelectedActivityId(act.id);
-              }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
-                act.id === activity?.id
-                  ? 'bg-amber-400/25 text-amber-300 border-amber-400/40 shadow-sm scale-105'
-                  : 'bg-black/30 text-emerald-200/70 hover:text-white border-white/5 hover:border-white/20'
-              }`}
-            >
-              <CalendarDays className="w-3.5 h-3.5 opacity-70" />
-              {act.title.length > 22 ? act.title.slice(0, 22) + '…' : act.title}
-              <span className="text-[10px] font-mono opacity-70">({act.date})</span>
-            </button>
-          ))}
-        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <FilterDropdown
+            label="Actividad"
+            options={activities.map(act => ({
+              id: act.id,
+              label: act.title,
+              subtitle: `${act.date} · ${act.location || 'Familia'}`,
+              emoji: act.type === 'novena' ? '🕯️' : act.type === 'dinner' ? '🍗' : '🎄',
+              badge: act.time,
+            }))}
+            value={selectedActivityId || (activities[0]?.id || '')}
+            onChange={id => {
+              soundFX.playClick();
+              setSelectedActivityId(id);
+            }}
+            icon={CalendarDays}
+            placeholder="Seleccionar Actividad"
+            className="flex-1 min-w-[240px]"
+          />
 
-        {/* Item status filter chips */}
-        <ChipGroup
-          label="Estado del momento"
-          options={[
-            { id: 'pending', label: 'Pendientes', emoji: '⏳', color: 'bg-amber-500/20 text-amber-300 border-amber-400/40' },
-            { id: 'completed', label: 'Completados', emoji: '✅', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40' },
-          ]}
-          value={itinStatusFilter}
-          onChange={setItinStatusFilter}
-        />
+          <FilterDropdown
+            label="Estado"
+            options={[
+              { id: '', label: 'Todos los momentos', emoji: '📋' },
+              { id: 'pending', label: 'Pendientes', emoji: '⏳' },
+              { id: 'completed', label: 'Completados', emoji: '✅' },
+            ]}
+            value={itinStatusFilter}
+            onChange={setItinStatusFilter}
+            icon={Clock}
+            placeholder="Todos"
+          />
+        </div>
       </FilterBar>
 
       {activity && (

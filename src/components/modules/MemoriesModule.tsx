@@ -14,6 +14,7 @@ import { soundFX } from '../../utils/audio';
 import { compressImageFile } from '../../utils/imageCompressor';
 import {
   FilterBar,
+  FilterDropdown,
   ChipGroup,
   SearchInput,
   SortDropdown,
@@ -131,18 +132,22 @@ export const MemoriesModule: React.FC = () => {
           />
         </div>
 
-        <div className="flex items-center gap-4 flex-wrap">
-          <ChipGroup
+        <div className="flex items-center gap-4 flex-wrap pt-1 border-t border-white/5">
+          <FilterDropdown
             label="Actividad"
             options={[
-              ...activities.slice(0, 5).map(act => ({
+              { id: '', label: 'Todas las actividades', emoji: '📸' },
+              ...activities.map(act => ({
                 id: act.title,
-                label: act.title.length > 20 ? act.title.slice(0, 20) + '…' : act.title,
-                color: 'bg-amber-500/20 text-amber-300 border-amber-400/40',
+                label: act.title,
+                subtitle: act.date,
+                emoji: act.type === 'novena' ? '🕯️' : '🎄',
               })),
             ]}
             value={memActivityFilter}
             onChange={setMemActivityFilter}
+            icon={Sparkles}
+            placeholder="Todas las actividades"
           />
           <MonthPicker
             value={memMonth}

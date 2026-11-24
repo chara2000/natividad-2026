@@ -13,11 +13,13 @@ import {
   Trash2,
   Lock,
   Unlock,
+  Check,
 } from 'lucide-react';
 import { useChristmas } from '../../context/ChristmasContext';
 import { soundFX } from '../../utils/audio';
 import {
   FilterBar,
+  FilterDropdown,
   ChipGroup,
   SearchInput,
   SortDropdown,
@@ -157,15 +159,20 @@ export const PollsModule: React.FC = () => {
             label="Ordenar"
           />
         </div>
-        <ChipGroup
-          label="Estado"
-          options={[
-            { id: 'activa', label: 'Activas', emoji: '🟢', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40' },
-            { id: 'cerrada', label: 'Cerradas', emoji: '🔒', color: 'bg-rose-500/20 text-rose-300 border-rose-400/40' },
-          ]}
-          value={pollStatusFilter}
-          onChange={setPollStatusFilter}
-        />
+        <div className="flex items-center gap-3 flex-wrap pt-1 border-t border-white/5">
+          <FilterDropdown
+            label="Estado"
+            options={[
+              { id: '', label: 'Todas las encuestas', emoji: '🗳️' },
+              { id: 'activa', label: 'Abiertas para votar', emoji: '🟢' },
+              { id: 'cerrada', label: 'Cerradas', emoji: '🔒' },
+            ]}
+            value={pollStatusFilter}
+            onChange={setPollStatusFilter}
+            icon={Check}
+            placeholder="Todas"
+          />
+        </div>
       </FilterBar>
 
       {/* Polls List */}

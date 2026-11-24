@@ -252,28 +252,136 @@ export const SortDropdown: React.FC<SortDropdownProps> = ({ options, value, onCh
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-emerald-200 hover:bg-white/10 hover:text-white transition-all"
+        className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-black/40 border border-white/10 hover:border-amber-400/40 text-xs text-emerald-200 hover:text-white transition-all cursor-pointer"
       >
         <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400/70" />
         <span>{label}: <span className="text-amber-300 font-semibold">{current?.label || '—'}</span></span>
         <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 z-50 glass-panel border border-white/10 rounded-2xl shadow-2xl min-w-[180px] overflow-hidden">
+        <div className="absolute right-0 top-full mt-1.5 z-50 rounded-2xl border border-amber-400/30 bg-[#06180e]/95 backdrop-blur-xl shadow-2xl min-w-[180px] overflow-hidden p-1">
           {options.map((opt) => (
             <button
               key={opt.id}
               onClick={() => { onChange(opt.id); setOpen(false); }}
-              className={`w-full text-left px-4 py-2.5 text-xs font-semibold transition-all flex items-center justify-between gap-2 ${
+              className={`w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-between gap-2 cursor-pointer ${
                 value === opt.id
-                  ? 'text-amber-300 bg-amber-500/10'
-                  : 'text-emerald-200/80 hover:bg-white/8 hover:text-white'
+                  ? 'text-amber-300 bg-amber-500/20 font-bold'
+                  : 'text-emerald-200/80 hover:bg-white/10 hover:text-white'
               }`}
             >
               {opt.label}
-              {value === opt.id && <Check className="w-3.5 h-3.5" />}
+              {value === opt.id && <Check className="w-3.5 h-3.5 text-amber-400" />}
             </button>
           ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ───────────────────────────────────────────
+// 6.1 GENERAL FILTER DROPDOWN
+// ───────────────────────────────────────────
+export interface DropdownOption {
+  id: string;
+  label: string;
+  emoji?: string;
+  subtitle?: string;
+  badge?: string;
+}
+
+export interface FilterDropdownProps {
+  label: string;
+  options: DropdownOption[];
+  value: string;
+  onChange: (id: string) => void;
+  icon?: React.ElementType;
+  placeholder?: string;
+  className?: string;
+}
+
+export const FilterDropdown: React.FC<FilterDropdownProps> = ({
+  label,
+  options,
+  value,
+  onChange,
+  icon: Icon,
+  placeholder = 'Todos',
+  className = '',
+}) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const current = options.find((o) => o.id === value);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div className={`relative ${className}`} ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-black/40 border border-white/10 hover:border-amber-400/40 text-xs text-emerald-100 hover:text-white transition-all cursor-pointer shadow-sm w-full sm:w-auto justify-between"
+      >
+        <div className="flex items-center gap-2 truncate">
+          {Icon && <Icon className="w-3.5 h-3.5 text-amber-400/80 flex-shrink-0" />}
+          <span className="text-[10px] uppercase font-bold text-emerald-300/60 tracking-wider">
+            {label}:
+          </span>
+          <span className="text-amber-300 font-bold truncate flex items-center gap-1">
+            {current?.emoji && <span>{current.emoji}</span>}
+            <span>{current ? current.label : placeholder}</span>
+          </span>
+        </div>
+        <ChevronDown className={`w-3.5 h-3.5 text-emerald-400/60 transition-transform duration-200 flex-shrink-0 ml-1.5 ${open ? 'rotate-180 text-amber-400' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1.5 z-50 rounded-2xl border border-amber-400/30 bg-[#06180e]/95 backdrop-blur-xl shadow-2xl min-w-[220px] max-w-[320px] max-h-72 overflow-y-auto overflow-x-hidden p-1.5 space-y-0.5">
+          {options.map((opt) => {
+            const isSelected = value === opt.id;
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => {
+                  onChange(opt.id);
+                  setOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-between gap-2 cursor-pointer ${
+                  isSelected
+                    ? 'text-amber-300 bg-amber-500/20 border border-amber-400/30 font-bold'
+                    : 'text-emerald-100/80 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  {opt.emoji && <span className="text-sm flex-shrink-0">{opt.emoji}</span>}
+                  <div className="truncate">
+                    <div className="truncate">{opt.label}</div>
+                    {opt.subtitle && (
+                      <div className="text-[10px] text-emerald-300/60 font-normal truncate">
+                        {opt.subtitle}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {opt.badge && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-mono">
+                      {opt.badge}
+                    </span>
+                  )}
+                  {isSelected && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -394,8 +502,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
 
       {/* Body */}
       <div
-        className={`transition-all duration-300 overflow-hidden ${
-          open ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+        className={`transition-all duration-300 ${
+          open ? 'max-h-[700px] opacity-100 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'
         }`}
       >
         <div className="px-5 pb-5 pt-1 space-y-4 border-t border-white/5">

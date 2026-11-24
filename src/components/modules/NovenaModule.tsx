@@ -14,9 +14,11 @@ import {
   CheckCircle2,
   Volume2,
   RotateCcw,
+  Calendar,
 } from 'lucide-react';
 import { soundFX } from '../../utils/audio';
 import { fireHolidayConfetti } from '../../utils/confetti';
+import { FilterDropdown } from '../ui/FilterBar';
 
 /* ============================================================
    NOVENA DE AGUINALDOS COLOMBIANA — 100% CANÓNICA E ÍNTEGRA
@@ -734,36 +736,73 @@ export const NovenaModule: React.FC = () => {
         </button>
       </div>
 
-      {/* ── SELECTOR DE DÍA (1 AL 9) ── */}
-      <div className="glass-card rounded-2xl p-3.5 border border-amber-400/20 bg-black/40">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-[10px] uppercase tracking-widest text-amber-300 font-bold flex items-center gap-1.5">
-            <Star className="w-3.5 h-3.5 text-amber-400" /> Selecciona el Día de la Novena:
-          </p>
-          <span className="text-[11px] font-mono text-emerald-300 font-semibold">
-            {currentDay.dateStr}
-          </span>
+      {/* ── SELECTOR DE DÍA (1 AL 9) EN DROPDOWN ── */}
+      <div className="glass-card rounded-2xl p-4 border border-amber-400/25 bg-black/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-lg flex-shrink-0 shadow-sm">
+            ⭐
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-amber-300 font-bold flex items-center gap-1.5">
+              Día de la Novena Navideña
+            </p>
+            <h4 className="text-sm sm:text-base font-black text-white font-cinzel">
+              Día {selectedDayNum} · {currentDay.dateStr}
+            </h4>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1 flex-wrap gap-y-2">
-          {NOVENA_DAYS.map(d => (
-            <button
-              key={d.day}
-              onClick={() => {
-                soundFX.playClick?.();
-                setSelectedDayNum(d.day);
-                setGuidedStep(1);
-              }}
-              className={`px-3 py-2 rounded-2xl font-bold text-xs whitespace-nowrap transition-all border cursor-pointer ${
-                selectedDayNum === d.day
-                  ? 'bg-gradient-to-r from-amber-500 to-amber-400 text-pine-950 border-amber-300 shadow-md scale-105'
-                  : 'bg-black/40 text-emerald-100 hover:text-white border-white/10 hover:border-amber-400/30'
-              }`}
-            >
-              <span className="font-black">Día {d.day}</span>
-              <span className="ml-1 text-[11px] opacity-75">({15 + d.day} Dic)</span>
-            </button>
-          ))}
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          {/* Botón Día Anterior */}
+          <button
+            type="button"
+            disabled={selectedDayNum <= 1}
+            onClick={() => {
+              soundFX.playClick?.();
+              setSelectedDayNum(prev => Math.max(1, prev - 1));
+              setGuidedStep(1);
+            }}
+            className="px-3 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-400/40 text-xs font-bold text-emerald-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer flex items-center gap-1"
+            title="Día anterior"
+          >
+            ← <span className="hidden sm:inline">Anterior</span>
+          </button>
+
+          {/* Dropdown Selector para los 9 días */}
+          <FilterDropdown
+            label="Día"
+            options={NOVENA_DAYS.map(d => ({
+              id: String(d.day),
+              label: `Día ${d.day} (${15 + d.day} Dic)`,
+              subtitle: d.title.replace(/^Día [^—]+—\s*/, ''),
+              emoji: d.day === 9 ? '👶' : '🕯️',
+              badge: `${15 + d.day} Dic`,
+            }))}
+            value={String(selectedDayNum)}
+            onChange={id => {
+              soundFX.playClick?.();
+              setSelectedDayNum(Number(id));
+              setGuidedStep(1);
+            }}
+            icon={Calendar}
+            placeholder="Seleccionar Día"
+            className="flex-1 sm:flex-initial"
+          />
+
+          {/* Botón Día Siguiente */}
+          <button
+            type="button"
+            disabled={selectedDayNum >= 9}
+            onClick={() => {
+              soundFX.playClick?.();
+              setSelectedDayNum(prev => Math.min(9, prev + 1));
+              setGuidedStep(1);
+            }}
+            className="px-3 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-400/40 text-xs font-bold text-emerald-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer flex items-center gap-1"
+            title="Día siguiente"
+          >
+            <span className="hidden sm:inline">Siguiente</span> →
+          </button>
         </div>
       </div>
 

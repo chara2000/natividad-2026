@@ -30,6 +30,7 @@ import { Activity, ActivityType } from '../../types';
 import { soundFX } from '../../utils/audio';
 import {
   FilterBar,
+  FilterDropdown,
   ChipGroup,
   ChipOption,
   DateRangePicker,
@@ -538,60 +539,64 @@ export const ActivitiesModule: React.FC = () => {
         )}
       </div>
 
-      {/* ── Carrusel Festivo de Días de Novena y Fechas Clave ── */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs text-amber-300 font-bold px-1">
-          <span className="flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Calendario de Novenas & Fechas Clave (16 al 31 Dic)
-          </span>
-          {novenaTimelineFilter !== 'all' && (
-            <button
-              onClick={() => setNovenaTimelineFilter('all')}
-              className="text-[11px] text-rose-300 hover:text-rose-200 underline font-semibold cursor-pointer"
-            >
-              Restablecer a todas las fechas
-            </button>
-          )}
+      {/* ── Selector Rápido de Días de Novena y Fechas Clave (Dropdown) ── */}
+      <div className="glass-card rounded-2xl p-4 border border-amber-400/25 bg-black/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-base flex-shrink-0">
+            🕯️
+          </div>
+          <div>
+            <span className="text-[10px] font-bold text-amber-300 uppercase tracking-widest block">
+              Calendario Navideño
+            </span>
+            <span className="text-xs sm:text-sm font-bold text-white font-cinzel">
+              {NOVENA_SCHEDULE.find(s => s.id === novenaTimelineFilter)?.label || 'Todas las fechas'}
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-amber-500/30 scrollbar-track-transparent">
-          {NOVENA_SCHEDULE.map(item => {
-            const isSelected = novenaTimelineFilter === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  soundFX.playClick();
-                  setNovenaTimelineFilter(item.id);
-                  if (item.id !== 'all') {
-                    const match = activities.find(a => {
-                      if (item.dayNum && a.novenaDay === item.dayNum) return true;
-                      if (item.dateStr && a.date === item.dateStr) return true;
-                      if (item.id === 'cena' && a.type === 'dinner') return true;
-                      return false;
-                    });
-                    if (match) setActiveActivityId(match.id);
-                  }
-                }}
-                className={`flex-shrink-0 px-3.5 py-2 rounded-2xl border text-left transition-all cursor-pointer ${
-                  isSelected
-                    ? 'bg-gradient-to-r from-amber-500/25 to-emerald-500/25 border-amber-400 text-white shadow-lg shadow-amber-500/10 scale-[1.02]'
-                    : 'bg-black/40 hover:bg-black/60 border-white/10 text-emerald-200/70 hover:border-white/20'
-                }`}
-              >
-                <div className="flex items-center gap-1.5 font-bold text-xs">
-                  <span>{item.emoji}</span>
-                  <span className={isSelected ? 'text-amber-300 font-black' : 'text-white'}>
-                    {item.label}
-                  </span>
-                </div>
-                <span className="text-[10px] text-emerald-300/70 block font-mono mt-0.5">
-                  {item.subtitle}
-                </span>
-              </button>
-            );
-          })}
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <FilterDropdown
+            label="Fecha / Novena"
+            options={NOVENA_SCHEDULE.map(item => ({
+              id: item.id,
+              label: item.label,
+              subtitle: item.subtitle,
+              emoji: item.emoji,
+              badge: item.dateStr || undefined,
+            }))}
+            value={novenaTimelineFilter}
+            onChange={id => {
+              soundFX.playClick();
+              setNovenaTimelineFilter(id);
+              if (id !== 'all') {
+                const match = activities.find(a => {
+                  const item = NOVENA_SCHEDULE.find(s => s.id === id);
+                  if (!item) return false;
+                  if (item.dayNum && a.novenaDay === item.dayNum) return true;
+                  if (item.dateStr && a.date === item.dateStr) return true;
+                  if (item.id === 'cena' && a.type === 'dinner') return true;
+                  return false;
+                });
+                if (match) setActiveActivityId(match.id);
+              }
+            }}
+            icon={CalendarDays}
+            placeholder="Todas las fechas"
+          />
+
+          {novenaTimelineFilter !== 'all' && (
+            <button
+              type="button"
+              onClick={() => {
+                soundFX.playClick();
+                setNovenaTimelineFilter('all');
+              }}
+              className="text-[11px] text-rose-300 hover:text-rose-200 px-2.5 py-2 rounded-xl bg-rose-500/10 border border-rose-400/20 font-semibold cursor-pointer whitespace-nowrap"
+            >
+              Restablecer
+            </button>
+          )}
         </div>
       </div>
 
@@ -608,12 +613,34 @@ export const ActivitiesModule: React.FC = () => {
           setSortBy('date_asc');
         }}
       >
-        {/* Row 1: Search + Sort */}
+        {/* Row 1: Search + Dropdown Filters */}
         <div className="flex items-center gap-3 flex-wrap">
           <SearchInput
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder="Buscar por nombre, lugar o temática…"
+          />
+          <FilterDropdown
+            label="Tipo"
+            options={[
+              { id: 'all', label: 'Todos los tipos', emoji: '✨' },
+              ...activityTypeChips.map(c => ({ id: c.id, label: c.label, emoji: c.emoji })),
+            ]}
+            value={selectedTypeFilter}
+            onChange={setSelectedTypeFilter}
+            icon={Sparkles}
+            placeholder="Todos los tipos"
+          />
+          <FilterDropdown
+            label="Estado"
+            options={[
+              { id: '', label: 'Cualquier estado', emoji: '🌟' },
+              ...statusChips.map(c => ({ id: c.id, label: c.label, emoji: c.emoji })),
+            ]}
+            value={statusFilter}
+            onChange={setStatusFilter}
+            icon={Check}
+            placeholder="Cualquier estado"
           />
           <SortDropdown
             options={sortOptions}
@@ -623,22 +650,8 @@ export const ActivitiesModule: React.FC = () => {
           />
         </div>
 
-        {/* Row 2: Type chips */}
-        <ChipGroup
-          label="Tipo de Celebración"
-          options={activityTypeChips}
-          value={selectedTypeFilter}
-          onChange={setSelectedTypeFilter}
-        />
-
-        {/* Row 3: Status + Date Range */}
-        <div className="flex items-center gap-4 flex-wrap">
-          <ChipGroup
-            label="Estado"
-            options={statusChips}
-            value={statusFilter}
-            onChange={setStatusFilter}
-          />
+        {/* Row 2: Date Range */}
+        <div className="flex items-center gap-4 flex-wrap pt-1 border-t border-white/5">
           <DateRangePicker
             fromDate={dateFrom}
             toDate={dateTo}

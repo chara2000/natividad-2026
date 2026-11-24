@@ -30,6 +30,7 @@ import {
   Printer,
   Copy,
   ExternalLink,
+  Tag,
 } from 'lucide-react';
 import { useChristmas } from '../../context/ChristmasContext';
 import { ExpenseCategory } from '../../types';
@@ -37,6 +38,7 @@ import { soundFX } from '../../utils/audio';
 import { compressImageFile } from '../../utils/imageCompressor';
 import {
   FilterBar,
+  FilterDropdown,
   ChipGroup,
   SearchInput,
   SortDropdown,
@@ -610,7 +612,7 @@ export const FinancesModule: React.FC = () => {
       </div>
 
       {/* 3. Sub-Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-white/10 pb-2 overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-white/10 pb-2 flex-wrap sm:flex-nowrap">
         {[
           { id: 'contributions', label: `Aportes por Persona (${contributions.length})`, icon: UserCheck },
           { id: 'expenses', label: `Gastos & Compras (${expenses.length})`, icon: DollarSign },
@@ -778,16 +780,20 @@ export const FinancesModule: React.FC = () => {
             onClearAll={() => setMemberFilter('all')}
             defaultOpen={true}
           >
-            <ChipGroup
-              label="Estado del aporte"
-              options={[
-                { id: 'all', label: `Todos (${contributions.length})`, emoji: '👥', color: 'bg-white/15 text-white border-white/30' },
-                { id: 'pending', label: `Pendientes (${financialStats.pendingContributorsCount})`, emoji: '⚠️', color: 'bg-rose-500/20 text-rose-300 border-rose-400/40' },
-                { id: 'paid', label: `Al día (${financialStats.paidContributorsCount})`, emoji: '✅', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40' },
-              ]}
-              value={memberFilter}
-              onChange={(id) => setMemberFilter((id || 'all') as any)}
-            />
+            <div className="flex items-center gap-3 flex-wrap">
+              <FilterDropdown
+                label="Estado del aporte"
+                options={[
+                  { id: 'all', label: `Todos (${contributions.length})`, emoji: '👥' },
+                  { id: 'pending', label: `Pendientes (${financialStats.pendingContributorsCount})`, emoji: '⚠️' },
+                  { id: 'paid', label: `Al día (${financialStats.paidContributorsCount})`, emoji: '✅' },
+                ]}
+                value={memberFilter}
+                onChange={(id) => setMemberFilter((id || 'all') as any)}
+                icon={Users}
+                placeholder="Todos"
+              />
+            </div>
           </FilterBar>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -912,12 +918,23 @@ export const FinancesModule: React.FC = () => {
               setExpSortBy('date_desc');
             }}
           >
-            {/* Row 1: Search + Sort */}
+            {/* Row 1: Search + Dropdown Filters */}
             <div className="flex items-center gap-3 flex-wrap">
               <SearchInput
                 value={expSearchQuery}
                 onChange={setExpSearchQuery}
                 placeholder="Buscar gasto o concepto…"
+              />
+              <FilterDropdown
+                label="Categoría"
+                options={[
+                  { id: '', label: 'Todas las categorías', emoji: '🏷️' },
+                  ...expCategoryChips.map(c => ({ id: c.id, label: c.label, emoji: c.emoji })),
+                ]}
+                value={expCategoryFilter}
+                onChange={setExpCategoryFilter}
+                icon={Tag}
+                placeholder="Todas las categorías"
               />
               <SortDropdown
                 options={expSortOptions}
@@ -926,15 +943,8 @@ export const FinancesModule: React.FC = () => {
                 label="Ordenar"
               />
             </div>
-            {/* Row 2: Category chips */}
-            <ChipGroup
-              label="Categoría"
-              options={expCategoryChips}
-              value={expCategoryFilter}
-              onChange={setExpCategoryFilter}
-            />
-            {/* Row 3: Amount range + Date range */}
-            <div className="flex items-center gap-4 flex-wrap">
+            {/* Row 2: Amount range + Date range */}
+            <div className="flex items-center gap-4 flex-wrap pt-1 border-t border-white/5">
               <AmountRangeFilter
                 min={expAmountMin}
                 max={expAmountMax}
@@ -1006,27 +1016,19 @@ export const FinancesModule: React.FC = () => {
             <p className="text-xs text-emerald-200/80">
               Historial de pagos registrados mediante Nequi, Daviplata, efectivo o transferencia.
             </p>
-            <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/10 self-start sm:self-auto">
-              {[
-                { id: 'all', label: 'Todos' },
-                { id: 'pending', label: 'Pendientes' },
-                { id: 'approved', label: 'Aprobados' },
-                { id: 'rejected', label: 'Rechazados' },
-              ].map(f => (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => setReceiptStatusFilter(f.id as any)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    receiptStatusFilter === f.id
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
-                      : 'text-emerald-200/60 hover:text-white'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
+            <FilterDropdown
+              label="Estado"
+              options={[
+                { id: 'all', label: 'Todos los comprobantes', emoji: '🧾' },
+                { id: 'pending', label: 'Pendientes por verificar', emoji: '⏳' },
+                { id: 'approved', label: 'Aprobados', emoji: '✅' },
+                { id: 'rejected', label: 'Rechazados', emoji: '❌' },
+              ]}
+              value={receiptStatusFilter}
+              onChange={id => setReceiptStatusFilter(id as any)}
+              icon={Receipt}
+              placeholder="Todos"
+            />
           </div>
 
           <div className="space-y-2.5">
