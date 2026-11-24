@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useChristmas } from '../../context/ChristmasContext';
 import { soundFX } from '../../utils/audio';
-import { FilterBar, FilterDropdown, ChipGroup } from '../ui/FilterBar';
+import { FilterBar, NativeFilterSelect, FilterPills, ChipGroup } from '../ui/FilterBar';
 
 export const ItinerariesModule: React.FC = () => {
   const {
@@ -106,8 +106,8 @@ export const ItinerariesModule: React.FC = () => {
         onClearAll={() => { setItinStatusFilter(''); setItinResponsibleFilter(''); }}
         defaultOpen={true}
       >
-        <div className="flex items-center gap-3 flex-wrap">
-          <FilterDropdown
+        <div className="flex items-center gap-4 flex-wrap">
+          <NativeFilterSelect
             label="Actividad"
             options={activities.map(act => ({
               id: act.id,
@@ -126,17 +126,15 @@ export const ItinerariesModule: React.FC = () => {
             className="flex-1 min-w-[240px]"
           />
 
-          <FilterDropdown
+          <FilterPills
             label="Estado"
+            allLabel="Todos los momentos"
             options={[
-              { id: '', label: 'Todos los momentos', emoji: '📋' },
               { id: 'pending', label: 'Pendientes', emoji: '⏳' },
               { id: 'completed', label: 'Completados', emoji: '✅' },
             ]}
             value={itinStatusFilter}
             onChange={setItinStatusFilter}
-            icon={Clock}
-            placeholder="Todos"
           />
         </div>
       </FilterBar>

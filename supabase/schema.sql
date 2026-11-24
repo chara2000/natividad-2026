@@ -255,3 +255,29 @@ CREATE POLICY "Public Full Access Polls" ON public.polls FOR ALL USING (true) WI
 CREATE POLICY "Public Full Access Poll Options" ON public.poll_options FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Full Access Poll Votes" ON public.poll_votes FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public Full Access Memories" ON public.memories FOR ALL USING (true) WITH CHECK (true);
+
+-- 19. TRIGGER AUTOMÁTICO: VINCULAR USUARIOS DE GOOGLE / AUTH A LA TABLA PROFILES
+CREATE OR REPLACE FUNCTION public.handle_new_auth_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (user_id, name, email, avatar, role, family_group)
+  VALUES (
+    new.id,
+    COALESCE(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)),
+    new.email,
+    COALESCE(new.raw_user_meta_data->>'avatar_url', new.raw_user_meta_data->>'picture', 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="85">🎅</text></svg>'),
+    'member',
+    'Familia'
+  )
+  ON CONFLICT (email) DO UPDATE SET
+    user_id = EXCLUDED.user_id,
+    name = COALESCE(public.profiles.name, EXCLUDED.name),
+    avatar = COALESCE(public.profiles.avatar, EXCLUDED.avatar);
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT OR UPDATE ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_auth_user();

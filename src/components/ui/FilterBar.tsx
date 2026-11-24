@@ -47,13 +47,14 @@ export const SearchInput: React.FC<SearchInputProps> = ({
 );
 
 // ───────────────────────────────────────────
-// 2. CHIP / BADGE GROUP
+// 2. CHIP / BADGE GROUP & FILTER PILLS (NO-SCROLL FLEX-WRAP)
 // ───────────────────────────────────────────
 export interface ChipOption {
   id: string;
   label: string;
   emoji?: string;
   color?: string; // Tailwind class string e.g. 'bg-amber-500/20 text-amber-300 border-amber-400/40'
+  badge?: string;
 }
 
 interface ChipGroupProps {
@@ -61,33 +62,56 @@ interface ChipGroupProps {
   value: string;        // single select
   onChange: (id: string) => void;
   label?: string;
+  allLabel?: string;
 }
-export const ChipGroup: React.FC<ChipGroupProps> = ({ options, value, onChange, label }) => (
-  <div className="flex items-center gap-2 flex-wrap">
+export const ChipGroup: React.FC<ChipGroupProps> = ({ options, value, onChange, label, allLabel }) => (
+  <div className="flex items-center gap-1.5 flex-wrap">
     {label && (
-      <span className="text-[10px] uppercase font-bold text-emerald-300/60 tracking-widest shrink-0">{label}</span>
+      <span className="text-[10px] uppercase font-bold text-emerald-300/60 tracking-widest shrink-0 mr-1">{label}:</span>
+    )}
+    {allLabel && (
+      <button
+        type="button"
+        onClick={() => onChange('')}
+        className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-200 cursor-pointer ${
+          value === ''
+            ? 'bg-amber-400/25 text-amber-300 border-amber-400/50 shadow-sm shadow-amber-400/10 font-bold scale-[1.02]'
+            : 'bg-white/5 text-emerald-200/70 border-white/10 hover:bg-white/10 hover:text-white'
+        }`}
+      >
+        <span>🌟</span>
+        <span>{allLabel}</span>
+      </button>
     )}
     {options.map((opt) => {
       const isActive = value === opt.id;
-      const activeColor = opt.color || 'bg-amber-500/20 text-amber-300 border-amber-400/40';
+      const activeColor = opt.color || 'bg-amber-400/25 text-amber-300 border-amber-400/50 shadow-sm shadow-amber-400/10';
       return (
         <button
           key={opt.id}
+          type="button"
           onClick={() => onChange(isActive ? '' : opt.id)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-xs font-semibold border whitespace-nowrap transition-all duration-200 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-200 cursor-pointer ${
             isActive
-              ? `${activeColor} shadow-sm shadow-amber-500/10 scale-105`
+              ? `${activeColor} font-bold scale-[1.02]`
               : 'bg-white/5 text-emerald-200/70 border-white/10 hover:bg-white/10 hover:text-white'
           }`}
         >
-          {opt.emoji && <span>{opt.emoji}</span>}
-          {opt.label}
-          {isActive && <Check className="w-3 h-3 ml-0.5" />}
+          {opt.emoji && <span className="text-sm">{opt.emoji}</span>}
+          <span>{opt.label}</span>
+          {opt.badge && (
+            <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-mono">
+              {opt.badge}
+            </span>
+          )}
+          {isActive && <Check className="w-3 h-3 ml-0.5 text-amber-400" />}
         </button>
       );
     })}
   </div>
 );
+
+export const FilterPills = ChipGroup;
 
 // ───────────────────────────────────────────
 // 3. MULTI-SELECT CHIP GROUP
@@ -389,6 +413,62 @@ export const FilterDropdown: React.FC<FilterDropdownProps> = ({
 };
 
 // ───────────────────────────────────────────
+// 6.2 NATIVE FILTER SELECT (ZERO CLIPPING, 100% RELIABLE)
+// ───────────────────────────────────────────
+export interface NativeFilterSelectProps {
+  label: string;
+  options: DropdownOption[];
+  value: string;
+  onChange: (id: string) => void;
+  icon?: React.ElementType;
+  placeholder?: string;
+  className?: string;
+}
+
+export const NativeFilterSelect: React.FC<NativeFilterSelectProps> = ({
+  label,
+  options,
+  value,
+  onChange,
+  icon: Icon,
+  placeholder = 'Todos',
+  className = '',
+}) => {
+  const current = options.find((o) => o.id === value);
+  return (
+    <div className={`relative inline-flex items-center ${className}`}>
+      <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-black/40 border border-white/10 hover:border-amber-400/40 text-xs text-emerald-100 transition-all shadow-sm w-full sm:w-auto justify-between pointer-events-none">
+        <div className="flex items-center gap-2 truncate">
+          {Icon && <Icon className="w-3.5 h-3.5 text-amber-400/80 flex-shrink-0" />}
+          <span className="text-[10px] uppercase font-bold text-emerald-300/60 tracking-wider">
+            {label}:
+          </span>
+          <span className="text-amber-300 font-bold truncate flex items-center gap-1">
+            {current?.emoji && <span>{current.emoji}</span>}
+            <span>{current ? current.label : placeholder}</span>
+          </span>
+        </div>
+        <ChevronDown className="w-3.5 h-3.5 text-emerald-400/60 ml-2 flex-shrink-0" />
+      </div>
+      {/* Invisible native select overlaid: guarantees native OS menu without ANY clipping */}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+        aria-label={label}
+      >
+        <option value="" className="bg-[#06180e] text-emerald-100">{placeholder}</option>
+        {options.map((opt) => (
+          <option key={opt.id} value={opt.id} className="bg-[#06180e] text-emerald-100">
+            {opt.emoji ? `${opt.emoji} ` : ''}{opt.label} {opt.badge ? `(${opt.badge})` : ''}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+// ───────────────────────────────────────────
 // 7. AMOUNT RANGE FILTER
 // ───────────────────────────────────────────
 interface AmountRangeProps {
@@ -461,7 +541,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="glass-card rounded-3xl border border-white/10 overflow-hidden transition-all">
+    <div className={`glass-card rounded-3xl border border-white/10 transition-all ${open ? 'overflow-visible' : 'overflow-hidden'}`}>
       {/* Header toggle */}
       <div className="w-full flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-white/5 transition-all">
         <button

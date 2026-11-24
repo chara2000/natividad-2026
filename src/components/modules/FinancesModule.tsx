@@ -39,6 +39,8 @@ import { compressImageFile } from '../../utils/imageCompressor';
 import {
   FilterBar,
   FilterDropdown,
+  FilterPills,
+  NativeFilterSelect,
   ChipGroup,
   SearchInput,
   SortDropdown,
@@ -781,7 +783,7 @@ export const FinancesModule: React.FC = () => {
             defaultOpen={true}
           >
             <div className="flex items-center gap-3 flex-wrap">
-              <FilterDropdown
+              <FilterPills
                 label="Estado del aporte"
                 options={[
                   { id: 'all', label: `Todos (${contributions.length})`, emoji: '👥' },
@@ -790,8 +792,6 @@ export const FinancesModule: React.FC = () => {
                 ]}
                 value={memberFilter}
                 onChange={(id) => setMemberFilter((id || 'all') as any)}
-                icon={Users}
-                placeholder="Todos"
               />
             </div>
           </FilterBar>
@@ -918,23 +918,12 @@ export const FinancesModule: React.FC = () => {
               setExpSortBy('date_desc');
             }}
           >
-            {/* Row 1: Search + Dropdown Filters */}
+            {/* Row 1: Search + Sort */}
             <div className="flex items-center gap-3 flex-wrap">
               <SearchInput
                 value={expSearchQuery}
                 onChange={setExpSearchQuery}
                 placeholder="Buscar gasto o concepto…"
-              />
-              <FilterDropdown
-                label="Categoría"
-                options={[
-                  { id: '', label: 'Todas las categorías', emoji: '🏷️' },
-                  ...expCategoryChips.map(c => ({ id: c.id, label: c.label, emoji: c.emoji })),
-                ]}
-                value={expCategoryFilter}
-                onChange={setExpCategoryFilter}
-                icon={Tag}
-                placeholder="Todas las categorías"
               />
               <SortDropdown
                 options={expSortOptions}
@@ -943,7 +932,17 @@ export const FinancesModule: React.FC = () => {
                 label="Ordenar"
               />
             </div>
-            {/* Row 2: Amount range + Date range */}
+            {/* Row 2: Category as Wrapped Pills */}
+            <div className="pt-1 border-t border-white/5">
+              <FilterPills
+                label="Categoría"
+                allLabel="Todas las categorías"
+                options={expCategoryChips}
+                value={expCategoryFilter}
+                onChange={setExpCategoryFilter}
+              />
+            </div>
+            {/* Row 3: Amount range + Date range */}
             <div className="flex items-center gap-4 flex-wrap pt-1 border-t border-white/5">
               <AmountRangeFilter
                 min={expAmountMin}
@@ -1016,18 +1015,16 @@ export const FinancesModule: React.FC = () => {
             <p className="text-xs text-emerald-200/80">
               Historial de pagos registrados mediante Nequi, Daviplata, efectivo o transferencia.
             </p>
-            <FilterDropdown
+            <FilterPills
               label="Estado"
               options={[
-                { id: 'all', label: 'Todos los comprobantes', emoji: '🧾' },
-                { id: 'pending', label: 'Pendientes por verificar', emoji: '⏳' },
+                { id: 'all', label: 'Todos', emoji: '🧾' },
+                { id: 'pending', label: 'Pendientes', emoji: '⏳' },
                 { id: 'approved', label: 'Aprobados', emoji: '✅' },
                 { id: 'rejected', label: 'Rechazados', emoji: '❌' },
               ]}
               value={receiptStatusFilter}
-              onChange={id => setReceiptStatusFilter(id as any)}
-              icon={Receipt}
-              placeholder="Todos"
+              onChange={id => setReceiptStatusFilter((id || 'all') as any)}
             />
           </div>
 

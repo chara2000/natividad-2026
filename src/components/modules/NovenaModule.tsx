@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { soundFX } from '../../utils/audio';
 import { fireHolidayConfetti } from '../../utils/confetti';
-import { FilterDropdown } from '../ui/FilterBar';
+import { FilterPills, SearchInput } from '../ui/FilterBar';
 
 /* ============================================================
    NOVENA DE AGUINALDOS COLOMBIANA — 100% CANÓNICA E ÍNTEGRA
@@ -664,6 +664,12 @@ export const NovenaModule: React.FC = () => {
   const [guidedStep, setGuidedStep] = useState<number>(1);
   const [shakeCount, setShakeCount] = useState(0);
 
+  // Filters for sub-sections
+  const [prayerFilter, setPrayerFilter] = useState<string>('all');
+  const [carolFilter, setCarolFilter] = useState<string>('all');
+  const [carolSearch, setCarolSearch] = useState<string>('');
+  const [gozoFilter, setGozoFilter] = useState<string>('all');
+
   // Accordion states
   const [expandedGozoIndex, setExpandedGozoIndex] = useState<number | null>(0);
   const [expandedCarolIndex, setExpandedCarolIndex] = useState<number | null>(0);
@@ -736,78 +742,86 @@ export const NovenaModule: React.FC = () => {
         </button>
       </div>
 
-      {/* ── SELECTOR DE DÍA (1 AL 9) EN DROPDOWN ── */}
-      <div className="glass-card rounded-2xl p-4 border border-amber-400/25 bg-black/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-lg flex-shrink-0 shadow-sm">
-            ⭐
+      {/* ── SELECTOR VISUAL DE LOS 9 DÍAS (16 AL 24 DE DICIEMBRE) — SIN CLIPPING NI SCROLL ── */}
+      <div className="glass-card rounded-3xl p-4 sm:p-5 border border-amber-400/30 bg-black/40 space-y-3 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-pine-950 flex items-center justify-center text-lg flex-shrink-0 shadow-md font-bold">
+              {selectedDayNum === 9 ? '👶' : '⭐'}
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-amber-300 font-bold flex items-center gap-1.5">
+                Día {selectedDayNum} de la Novena de Aguinaldos · {currentDay.dateStr}
+              </p>
+              <h4 className="text-sm sm:text-base font-black text-white font-cinzel line-clamp-1">
+                {currentDay.title}
+              </h4>
+            </div>
           </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-widest text-amber-300 font-bold flex items-center gap-1.5">
-              Día de la Novena Navideña
-            </p>
-            <h4 className="text-sm sm:text-base font-black text-white font-cinzel">
-              Día {selectedDayNum} · {currentDay.dateStr}
-            </h4>
+
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <button
+              type="button"
+              disabled={selectedDayNum <= 1}
+              onClick={() => {
+                soundFX.playClick?.();
+                setSelectedDayNum(prev => Math.max(1, prev - 1));
+                setGuidedStep(1);
+              }}
+              className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-400/40 text-xs font-bold text-emerald-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer flex items-center gap-1"
+            >
+              ← <span className="hidden sm:inline">Anterior</span>
+            </button>
+            <span className="text-xs font-mono font-bold text-amber-300 px-2 py-1 rounded-lg bg-amber-400/10 border border-amber-400/25">
+              {selectedDayNum}/9
+            </span>
+            <button
+              type="button"
+              disabled={selectedDayNum >= 9}
+              onClick={() => {
+                soundFX.playClick?.();
+                setSelectedDayNum(prev => Math.min(9, prev + 1));
+                setGuidedStep(1);
+              }}
+              className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-400/40 text-xs font-bold text-emerald-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer flex items-center gap-1"
+            >
+              <span className="hidden sm:inline">Siguiente</span> →
+            </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-          {/* Botón Día Anterior */}
-          <button
-            type="button"
-            disabled={selectedDayNum <= 1}
-            onClick={() => {
-              soundFX.playClick?.();
-              setSelectedDayNum(prev => Math.max(1, prev - 1));
-              setGuidedStep(1);
-            }}
-            className="px-3 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-400/40 text-xs font-bold text-emerald-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer flex items-center gap-1"
-            title="Día anterior"
-          >
-            ← <span className="hidden sm:inline">Anterior</span>
-          </button>
-
-          {/* Dropdown Selector para los 9 días */}
-          <FilterDropdown
-            label="Día"
-            options={NOVENA_DAYS.map(d => ({
-              id: String(d.day),
-              label: `Día ${d.day} (${15 + d.day} Dic)`,
-              subtitle: d.title.replace(/^Día [^—]+—\s*/, ''),
-              emoji: d.day === 9 ? '👶' : '🕯️',
-              badge: `${15 + d.day} Dic`,
-            }))}
-            value={String(selectedDayNum)}
-            onChange={id => {
-              soundFX.playClick?.();
-              setSelectedDayNum(Number(id));
-              setGuidedStep(1);
-            }}
-            icon={Calendar}
-            placeholder="Seleccionar Día"
-            className="flex-1 sm:flex-initial"
-          />
-
-          {/* Botón Día Siguiente */}
-          <button
-            type="button"
-            disabled={selectedDayNum >= 9}
-            onClick={() => {
-              soundFX.playClick?.();
-              setSelectedDayNum(prev => Math.min(9, prev + 1));
-              setGuidedStep(1);
-            }}
-            className="px-3 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-amber-400/40 text-xs font-bold text-emerald-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer flex items-center gap-1"
-            title="Día siguiente"
-          >
-            <span className="hidden sm:inline">Siguiente</span> →
-          </button>
+        {/* 9 Day Visual Grid (Responsive, Touch-friendly, Zero layout clip) */}
+        <div className="grid grid-cols-3 sm:grid-cols-9 gap-1.5 pt-1">
+          {NOVENA_DAYS.map(d => {
+            const isCurrent = d.day === selectedDayNum;
+            return (
+              <button
+                key={d.day}
+                type="button"
+                onClick={() => {
+                  soundFX.playClick?.();
+                  setSelectedDayNum(d.day);
+                  setGuidedStep(1);
+                }}
+                className={`p-2 rounded-2xl flex flex-col items-center justify-center text-center transition-all cursor-pointer border ${
+                  isCurrent
+                    ? 'bg-gradient-to-b from-amber-400 to-amber-500 text-pine-950 border-amber-300 font-black shadow-lg shadow-amber-500/25 scale-[1.03]'
+                    : 'bg-black/30 hover:bg-white/10 text-emerald-200/80 border-white/10 hover:border-amber-400/30'
+                }`}
+              >
+                <span className="text-base sm:text-lg">{d.day === 9 ? '👶' : '🕯️'}</span>
+                <span className="text-[11px] font-bold mt-0.5">Día {d.day}</span>
+                <span className={`text-[9px] font-mono ${isCurrent ? 'text-pine-950/80 font-bold' : 'text-emerald-400/60'}`}>
+                  {15 + d.day} Dic
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* ── NAVEGACIÓN PRINCIPAL DE SECCIONES ── */}
-      <div className="flex items-center gap-2 border-b border-white/10 pb-2 overflow-x-auto scrollbar-none">
+      {/* ── NAVEGACIÓN PRINCIPAL DE SECCIONES (FLEX-WRAP RESPONSIVO) ── */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-white/10 pb-3">
         {[
           { id: 'guided', label: `🕯️ Rezo Guiado (Día ${selectedDayNum})`, icon: Sparkles },
           { id: 'consideration', label: `📖 Consideración del Día`, icon: BookOpen },
@@ -824,13 +838,13 @@ export const NovenaModule: React.FC = () => {
                 soundFX.playClick?.();
                 setActiveSection(tab.id as any);
               }}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 isActive
-                  ? 'bg-amber-400/25 text-amber-300 border border-amber-400/40 shadow-sm'
-                  : 'text-emerald-200/70 hover:text-white hover:bg-white/5'
+                  ? 'bg-amber-400/25 text-amber-300 border border-amber-400/40 shadow-sm font-bold'
+                  : 'bg-white/5 text-emerald-200/70 border border-white/5 hover:text-white hover:bg-white/10'
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-3.5 h-3.5 text-amber-400/80" />
               <span>{tab.label}</span>
             </button>
           );
@@ -1288,9 +1302,51 @@ export const NovenaModule: React.FC = () => {
               </p>
             </div>
 
+            {/* Filtro rápido de Estrofa (1 al 12) */}
+            <div className="space-y-1.5 pt-1">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-amber-300/80 block">
+                Seleccionar Estrofa de los Gozos:
+              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setGozoFilter('all')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                    gozoFilter === 'all'
+                      ? 'bg-amber-400 text-pine-950 font-black border-amber-300 shadow-sm'
+                      : 'bg-white/5 text-emerald-200/70 border-white/10 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  🌟 Todas (12)
+                </button>
+                {GOZOS_12_ESTROFAS.map(g => {
+                  const isSel = gozoFilter === String(g.num);
+                  return (
+                    <button
+                      key={g.num}
+                      type="button"
+                      onClick={() => {
+                        setGozoFilter(isSel ? 'all' : String(g.num));
+                        setExpandedGozoIndex(g.num);
+                      }}
+                      className={`px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                        isSel
+                          ? 'bg-amber-400 text-pine-950 border-amber-300 shadow-sm font-black'
+                          : 'bg-black/30 text-emerald-200/70 border-white/10 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      {g.num}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* 12 Gozos accordion */}
             <div className="space-y-2">
-              {GOZOS_12_ESTROFAS.map(gozo => (
+              {GOZOS_12_ESTROFAS
+                .filter(g => gozoFilter === 'all' || String(g.num) === gozoFilter)
+                .map(gozo => (
                 <div
                   key={gozo.num}
                   className={`rounded-2xl border transition-all overflow-hidden ${
@@ -1312,7 +1368,7 @@ export const NovenaModule: React.FC = () => {
                     <ChevronRight className={`w-4 h-4 text-emerald-300/60 transition-transform ${expandedGozoIndex === gozo.num ? 'rotate-90' : ''}`} />
                   </button>
 
-                  {expandedGozoIndex === gozo.num && (
+                  {(expandedGozoIndex === gozo.num || gozoFilter !== 'all') && (
                     <div className="px-4 pb-4">
                       <div className="bg-black/40 rounded-xl p-4 border border-white/5">
                         <pre className="text-sm text-emerald-100 font-serif leading-loose whitespace-pre-wrap italic">
@@ -1350,12 +1406,58 @@ export const NovenaModule: React.FC = () => {
               </p>
             </div>
 
+            {/* Filtro Temático de Oraciones (Píldoras en flex-wrap sin clipping) */}
+            <div className="space-y-1.5 pb-2">
+              <span className="text-[10px] uppercase tracking-wider font-bold text-emerald-300/80 block">
+                Filtro rápido de oración:
+              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPrayerFilter('all');
+                    setExpandedPrayerId(null);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                    prayerFilter === 'all'
+                      ? 'bg-amber-400/25 text-amber-300 border-amber-400/50 font-bold shadow-sm'
+                      : 'bg-white/5 text-emerald-200/70 border-white/10 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  🌟 Todas ({CANONICAL_PRAYERS.length})
+                </button>
+                {CANONICAL_PRAYERS.map(p => {
+                  const isSel = prayerFilter === p.id;
+                  const shortName = p.title.replace('Oración ', '').replace('para ', '').replace('a la ', '').replace('a ', '').replace('al ', '');
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        setPrayerFilter(isSel ? 'all' : p.id);
+                        setExpandedPrayerId(p.id);
+                      }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                        isSel
+                          ? 'bg-amber-400 text-pine-950 font-bold border-amber-300 shadow-md'
+                          : 'bg-black/30 text-emerald-200/70 border-white/10 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      {shortName}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="space-y-2.5">
-              {CANONICAL_PRAYERS.map(oracion => (
+              {CANONICAL_PRAYERS
+                .filter(p => prayerFilter === 'all' || p.id === prayerFilter)
+                .map(oracion => (
                 <div
                   key={oracion.id}
                   className={`rounded-2xl border transition-all overflow-hidden ${
-                    expandedPrayerId === oracion.id
+                    expandedPrayerId === oracion.id || prayerFilter !== 'all'
                       ? 'border-emerald-400/40 bg-black/60 shadow-lg'
                       : 'border-white/10 bg-black/30 hover:border-emerald-400/20'
                   }`}
@@ -1368,10 +1470,10 @@ export const NovenaModule: React.FC = () => {
                       <span className="text-sm font-bold text-white block">{oracion.title}</span>
                       <span className="text-[11px] text-emerald-300/70 italic">{oracion.subtitle}</span>
                     </div>
-                    <ChevronRight className={`w-4 h-4 text-emerald-300/60 transition-transform flex-shrink-0 ${expandedPrayerId === oracion.id ? 'rotate-90' : ''}`} />
+                    <ChevronRight className={`w-4 h-4 text-emerald-300/60 transition-transform flex-shrink-0 ${expandedPrayerId === oracion.id || prayerFilter !== 'all' ? 'rotate-90' : ''}`} />
                   </button>
 
-                  {expandedPrayerId === oracion.id && (
+                  {(expandedPrayerId === oracion.id || prayerFilter !== 'all') && (
                     <div className="px-4 pb-4 space-y-3">
                       <div className="bg-black/50 rounded-2xl p-5 border border-white/8 space-y-3">
                         {oracion.text.split('\n\n').map((par, pIdx) => (
@@ -1411,12 +1513,69 @@ export const NovenaModule: React.FC = () => {
               </p>
             </div>
 
+            {/* Búsqueda y Filtros de Villancicos (Sin clipping ni desborde) */}
+            <div className="space-y-3">
+              <SearchInput
+                value={carolSearch}
+                onChange={setCarolSearch}
+                placeholder="Buscar villancico por título o letra…"
+              />
+
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCarolFilter('all');
+                    setExpandedCarolIndex(null);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                    carolFilter === 'all'
+                      ? 'bg-rose-500/25 text-rose-300 border-rose-400/50 font-bold shadow-sm'
+                      : 'bg-white/5 text-emerald-200/70 border-white/10 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  🎵 Todos ({COLOMBIAN_CAROLS.length})
+                </button>
+                {COLOMBIAN_CAROLS.map((c, idx) => {
+                  const isSel = carolFilter === c.title;
+                  return (
+                    <button
+                      key={c.title}
+                      type="button"
+                      onClick={() => {
+                        setCarolFilter(isSel ? 'all' : c.title);
+                        setExpandedCarolIndex(idx);
+                      }}
+                      className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                        isSel
+                          ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-pine-950 font-black border-amber-300 shadow-md'
+                          : 'bg-black/30 text-emerald-200/70 border-white/10 hover:bg-white/10 hover:text-white'
+                      }`}
+                    >
+                      {c.title}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="space-y-2.5">
-              {COLOMBIAN_CAROLS.map((carol, cIdx) => (
+              {COLOMBIAN_CAROLS
+                .filter(c => {
+                  if (carolFilter !== 'all' && c.title !== carolFilter) return false;
+                  if (carolSearch) {
+                    const q = carolSearch.toLowerCase();
+                    const matchTitle = c.title.toLowerCase().includes(q);
+                    const matchVerses = c.verses.some(v => v.toLowerCase().includes(q));
+                    return matchTitle || matchVerses;
+                  }
+                  return true;
+                })
+                .map((carol, cIdx) => (
                 <div
-                  key={cIdx}
+                  key={carol.title}
                   className={`rounded-2xl border transition-all overflow-hidden ${
-                    expandedCarolIndex === cIdx
+                    expandedCarolIndex === cIdx || carolFilter !== 'all' || carolSearch !== ''
                       ? 'border-rose-400/40 bg-black/60 shadow-lg'
                       : 'border-white/10 bg-black/30 hover:border-rose-400/20'
                   }`}
@@ -1432,10 +1591,10 @@ export const NovenaModule: React.FC = () => {
                         <span className="text-[11px] text-emerald-300/70">{carol.notes}</span>
                       </div>
                     </div>
-                    <ChevronRight className={`w-4 h-4 text-emerald-300/60 transition-transform flex-shrink-0 ${expandedCarolIndex === cIdx ? 'rotate-90' : ''}`} />
+                    <ChevronRight className={`w-4 h-4 text-emerald-300/60 transition-transform flex-shrink-0 ${expandedCarolIndex === cIdx || carolFilter !== 'all' || carolSearch !== '' ? 'rotate-90' : ''}`} />
                   </button>
 
-                  {expandedCarolIndex === cIdx && (
+                  {(expandedCarolIndex === cIdx || carolFilter !== 'all' || carolSearch !== '') && (
                     <div className="px-4 pb-4 space-y-2.5">
                       {carol.verses.map((verse, vIdx) => (
                         <div key={vIdx} className="bg-black/40 rounded-xl p-3.5 border border-white/5">

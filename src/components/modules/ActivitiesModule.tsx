@@ -31,6 +31,8 @@ import { soundFX } from '../../utils/audio';
 import {
   FilterBar,
   FilterDropdown,
+  NativeFilterSelect,
+  FilterPills,
   ChipGroup,
   ChipOption,
   DateRangePicker,
@@ -556,7 +558,7 @@ export const ActivitiesModule: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-          <FilterDropdown
+          <NativeFilterSelect
             label="Fecha / Novena"
             options={NOVENA_SCHEDULE.map(item => ({
               id: item.id,
@@ -613,34 +615,12 @@ export const ActivitiesModule: React.FC = () => {
           setSortBy('date_asc');
         }}
       >
-        {/* Row 1: Search + Dropdown Filters */}
+        {/* Row 1: Search + Sort + Date Range */}
         <div className="flex items-center gap-3 flex-wrap">
           <SearchInput
             value={searchQuery}
             onChange={setSearchQuery}
             placeholder="Buscar por nombre, lugar o temática…"
-          />
-          <FilterDropdown
-            label="Tipo"
-            options={[
-              { id: 'all', label: 'Todos los tipos', emoji: '✨' },
-              ...activityTypeChips.map(c => ({ id: c.id, label: c.label, emoji: c.emoji })),
-            ]}
-            value={selectedTypeFilter}
-            onChange={setSelectedTypeFilter}
-            icon={Sparkles}
-            placeholder="Todos los tipos"
-          />
-          <FilterDropdown
-            label="Estado"
-            options={[
-              { id: '', label: 'Cualquier estado', emoji: '🌟' },
-              ...statusChips.map(c => ({ id: c.id, label: c.label, emoji: c.emoji })),
-            ]}
-            value={statusFilter}
-            onChange={setStatusFilter}
-            icon={Check}
-            placeholder="Cualquier estado"
           />
           <SortDropdown
             options={sortOptions}
@@ -648,16 +628,34 @@ export const ActivitiesModule: React.FC = () => {
             onChange={setSortBy}
             label="Ordenar"
           />
-        </div>
-
-        {/* Row 2: Date Range */}
-        <div className="flex items-center gap-4 flex-wrap pt-1 border-t border-white/5">
           <DateRangePicker
             fromDate={dateFrom}
             toDate={dateTo}
             onFromChange={setDateFrom}
             onToChange={setDateTo}
-            label="Rango de Fechas"
+            label="Fechas"
+          />
+        </div>
+
+        {/* Row 2: Type Filters as Wrapped Pills (Zero clipping, full visibility) */}
+        <div className="pt-2 border-t border-white/5 space-y-1">
+          <FilterPills
+            label="Tipo"
+            allLabel="Todos"
+            options={activityTypeChips}
+            value={selectedTypeFilter === 'all' ? '' : selectedTypeFilter}
+            onChange={val => setSelectedTypeFilter(val === '' ? 'all' : (val as ActivityType))}
+          />
+        </div>
+
+        {/* Row 3: Status Filters as Wrapped Pills */}
+        <div className="pt-2 border-t border-white/5">
+          <FilterPills
+            label="Estado"
+            allLabel="Cualquiera"
+            options={statusChips}
+            value={statusFilter}
+            onChange={setStatusFilter}
           />
         </div>
       </FilterBar>

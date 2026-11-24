@@ -33,7 +33,7 @@ import {
 } from '../data/initialData';
 import { soundFX } from '../utils/audio';
 import { fireHolidayConfetti } from '../utils/confetti';
-import { syncActivityToSupabase, syncExpenseToSupabase, syncReceiptToSupabase, getSupabase } from '../lib/supabase';
+import { syncActivityToSupabase, syncExpenseToSupabase, syncReceiptToSupabase, getSupabase, isSupabaseConfigured } from '../lib/supabase';
 import { FestiveAlertModal, AlertModalOptions } from '../components/ui/FestiveAlertModal';
 
 interface ChristmasContextType {
@@ -336,6 +336,16 @@ export const ChristmasProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       }
       setMembers(prev => prev.map(m => m.id === existing.id ? updatedExisting : m));
+
+      // Guarantee existing profile is tied to auth.users in Supabase public.profiles table
+      const sb = getSupabase();
+      if (sb && isSupabaseConfigured() && email) {
+        void sb.from('profiles').update({
+          user_id: sbUser.id,
+          avatar: updatedExisting.avatar,
+        }).eq('email', email);
+      }
+
       soundFX.playJingleBell?.();
       showAlert(`¡Bienvenido(a) de nuevo, ${existing.name}! Tu cuenta está vinculada con Google 🎄`, 'Sesión Iniciada con Google', 'success');
 
@@ -361,6 +371,25 @@ export const ChristmasProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       authProvider: 'google',
       createdAt: new Date().toISOString(),
     };
+
+    // Guarantee new Google user is tied to Supabase public.profiles table
+    const sb = getSupabase();
+    if (sb && isSupabaseConfigured() && email) {
+      void (async () => {
+        try {
+          await sb.from('profiles').upsert({
+            user_id: sbUser.id,
+            name: fullName,
+            email: email,
+            avatar: avatar,
+            role: 'member',
+            family_group: 'Familia',
+          }, { onConflict: 'email' });
+        } catch (err) {
+          console.warn('Profiles table sync notice:', err);
+        }
+      })();
+    }
 
     setMembers(prev => {
       if (prev.some(m => m.id === newGoogleMember.id || (email && m.email === email))) return prev;

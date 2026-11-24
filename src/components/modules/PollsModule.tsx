@@ -19,7 +19,8 @@ import { useChristmas } from '../../context/ChristmasContext';
 import { soundFX } from '../../utils/audio';
 import {
   FilterBar,
-  FilterDropdown,
+  FilterPills,
+  NativeFilterSelect,
   ChipGroup,
   SearchInput,
   SortDropdown,
@@ -160,17 +161,15 @@ export const PollsModule: React.FC = () => {
           />
         </div>
         <div className="flex items-center gap-3 flex-wrap pt-1 border-t border-white/5">
-          <FilterDropdown
+          <FilterPills
             label="Estado"
+            allLabel="Todas las encuestas"
             options={[
-              { id: '', label: 'Todas las encuestas', emoji: '🗳️' },
               { id: 'activa', label: 'Abiertas para votar', emoji: '🟢' },
               { id: 'cerrada', label: 'Cerradas', emoji: '🔒' },
             ]}
             value={pollStatusFilter}
             onChange={setPollStatusFilter}
-            icon={Check}
-            placeholder="Todas"
           />
         </div>
       </FilterBar>

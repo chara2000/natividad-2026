@@ -215,6 +215,61 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   } | null>(null);
   const [copiedCallback, setCopiedCallback] = useState(false);
 
+  /* PWA Install state */
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
+      setIsInstalled(true);
+    }
+
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    soundFX.playClick();
+    if (isInstalled) {
+      setShowInstallGuide(true);
+      return;
+    }
+
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        if (choice?.outcome === 'accepted') {
+          setIsInstalled(true);
+        }
+        setDeferredPrompt(null);
+      } catch (err) {
+        console.warn('Install prompt error:', err);
+        setShowInstallGuide(true);
+      }
+    } else {
+      setShowInstallGuide(true);
+    }
+  };
+
   const selectedAvatarOption = AVATAR_OPTIONS.find(a => a.id === selectedAvatarId) ?? AVATAR_OPTIONS[0];
   const avatarUrl = makeAvatarDataUrl(selectedAvatarOption.emoji);
   const selectedRoleInfo = ROLES_INFO.find(r => r.id === role)!;
@@ -304,6 +359,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     };
 
     soundFX.playJingleBell();
+    // Guarantee user is saved/upserted to Supabase public.profiles table
+    const sb = getSupabase();
+    if (sb && isSupabaseConfigured()) {
+      void sb.from('profiles').upsert({
+        name: newGoogleUser.name,
+        email: newGoogleUser.email,
+        role: newGoogleUser.role,
+        family_group: newGoogleUser.familyGroup,
+        avatar: newGoogleUser.avatar,
+      }, { onConflict: 'email' });
+    }
     onLogin(newGoogleUser);
     setShowGoogleModal(false);
   };
@@ -404,6 +470,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     };
 
     soundFX.playJingleBell();
+    // Guarantee user is saved/upserted to Supabase public.profiles table
+    const sb = getSupabase();
+    if (sb && isSupabaseConfigured()) {
+      void sb.from('profiles').upsert({
+        name: newUser.name,
+        email: newUser.email,
+        phone: newUser.phone,
+        role: newUser.role,
+        family_group: newUser.familyGroup,
+        avatar: newUser.avatar,
+      }, { onConflict: 'email' });
+    }
     onLogin(newUser);
   };
 
@@ -477,6 +555,35 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <span>{errorMessage}</span>
               </div>
             )}
+
+            {/* ── BOTÓN INSTALAR PWA DIRECTO DESDE EL NAVEGADOR ── */}
+            <div className="mb-4 p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 via-emerald-600/20 to-amber-500/15 border border-amber-400/35 flex items-center justify-between gap-3 shadow-md">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-500 text-pine-950 flex items-center justify-center text-lg flex-shrink-0 shadow-sm font-bold">
+                  📲
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-bold text-white truncate">Instalar Natividad App</span>
+                    <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-400/25 text-amber-300 font-mono font-bold">
+                      PWA
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-emerald-200/80 truncate">
+                    {isInstalled ? '✓ Instalada en tu pantalla de inicio' : 'Acceso directo rápido sin tiendas de apps'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleInstallClick}
+                className="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-pine-950 font-black text-xs shadow-md active:scale-95 transition-all flex items-center gap-1 flex-shrink-0 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-pine-950" />
+                <span>{isInstalled ? 'Instalada' : 'Instalar'}</span>
+              </button>
+            </div>
 
             {/* ── GOOGLE SIGN-IN BUTTON ── */}
             <div className="mb-4">
@@ -977,6 +1084,55 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 Cerrar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════
+          PWA INSTALLATION GUIDE MODAL (IOS & ANDROID/PC)
+      ══════════════════════════════════════════════ */}
+      {showInstallGuide && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="glass-card max-w-sm w-full rounded-3xl p-6 border border-amber-400/40 bg-[#06180e]/95 text-center space-y-4 shadow-2xl">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-400 text-pine-950 flex items-center justify-center text-3xl shadow-lg">
+              📲
+            </div>
+
+            <div>
+              <h3 className="text-lg font-black font-cinzel text-white">
+                Cómo Instalar Natividad
+              </h3>
+              <p className="text-xs text-amber-300 font-semibold mt-0.5">
+                Plataforma Web Progresiva (PWA)
+              </p>
+            </div>
+
+            <div className="space-y-3 text-left text-xs text-emerald-100 bg-black/40 p-4 rounded-2xl border border-white/10">
+              <div className="space-y-1">
+                <span className="font-bold text-amber-300 block">📱 En iPhone / iPad (Safari):</span>
+                <p className="text-emerald-200/90 leading-relaxed">
+                  1. Toca el botón <strong>Compartir</strong> (icono ⬆️ en la barra inferior de Safari).<br />
+                  2. Baja y pulsa <strong>"Agregar a pantalla de inicio"</strong> ➕.<br />
+                  3. Pulsa <strong>"Agregar"</strong> en la esquina superior derecha.
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-white/10 space-y-1">
+                <span className="font-bold text-amber-300 block">🤖 En Android / Chrome / Edge:</span>
+                <p className="text-emerald-200/90 leading-relaxed">
+                  1. Toca el menú de tres puntos (<strong>⋮</strong>) en la esquina superior derecha.<br />
+                  2. Pulsa <strong>"Instalar aplicación"</strong> o "Agregar a la pantalla principal".
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowInstallGuide(false)}
+              className="w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-pine-950 font-bold text-xs shadow-md cursor-pointer transition-all"
+            >
+              ¡Entendido, gracias! 🎄
+            </button>
           </div>
         </div>
       )}

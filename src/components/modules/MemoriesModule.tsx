@@ -14,7 +14,8 @@ import { soundFX } from '../../utils/audio';
 import { compressImageFile } from '../../utils/imageCompressor';
 import {
   FilterBar,
-  FilterDropdown,
+  NativeFilterSelect,
+  FilterPills,
   ChipGroup,
   SearchInput,
   SortDropdown,
@@ -133,7 +134,7 @@ export const MemoriesModule: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-4 flex-wrap pt-1 border-t border-white/5">
-          <FilterDropdown
+          <NativeFilterSelect
             label="Actividad"
             options={[
               { id: '', label: 'Todas las actividades', emoji: '📸' },
